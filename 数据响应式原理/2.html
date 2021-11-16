@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible"
+        content="IE=edge">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="root">111</div>
+
+  <script>
+    /*
+     * @Description: defineProperty之后，就可以通过set做一些事儿了，比如修改DOM
+     */
+    function defineReactive(obj, key, val) {
+      Object.defineProperty(obj, key, {
+        get() {
+          console.log('get:', val);
+          return val;
+        },
+        set(newVal) {
+          if (val !== newVal) {
+            console.log('set:', newVal);
+            val = newVal;
+
+            //当被我拦截的这个值发生变更，执行这个函数，这个函数去更新DOM。
+
+            update()
+          }
+        },
+      });
+    }
+
+    function update() {
+      let root = document.querySelector('#root')
+      root.innerHTML = obj.name
+    }
+
+    let obj = {}
+
+    defineReactive(obj, 'name', 'cboy')
+    obj.name = 'cboy222'
+    setInterval(() => {
+      obj.name = new Date().toLocaleString()
+    }, 200);
+  </script>
+</body>
+
+</html>
