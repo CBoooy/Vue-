@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible"
+        content="IE=edge">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<div id="app">
+  <div @click = 'divClick'>{{counter}}</div>
+  <div c-text='counter'></div>
+  <div c-html='htmlStr'></div>
+  <div>{{arr}}</div>
+  <input type="text" c-model='counter' value='1'/>
+</div>
+
+<body>
+
+  <script src="./Cue.js"></script>
+
+  <script>
+    let app = new Cue({
+      data:{
+        counter:23,
+        htmlStr:'<span style="color:red">cboy</span>',
+        arr:[1,2,3]
+      },
+      methods:{
+        divClick(){
+          this.counter++
+        }
+      }
+    })
+
+    // setInterval(() => {
+    //   app.arr.push(2)
+    // }, 1000);
+
+  </script>
+</body>
+
+</html>

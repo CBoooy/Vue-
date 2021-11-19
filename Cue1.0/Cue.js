@@ -1,22 +1,48 @@
+// 数组响应式
+// 1 替换数组原型中的七个方法
+// let originArrayProto = Array.prototype
+let cueArrayProto = Object.create(Array.prototype);
+let methodsArray = [
+  'push',
+  'pop',
+  'shift',
+  'unshift',
+  'reverse',
+  'sort',
+  'splice',
+];
+methodsArray.forEach((method) => {
+  //cueArrayProto[push], 对push方法做覆盖。
+  cueArrayProto[method] = function () {
+    //原始的push方法的行为：
+    Array.prototype[method].apply(this, arguments);
+
+    //通知更新,即：当使用data.counters.push后，counters的值就会变化，
+    // 但，这个counters是一个数组，没有做响应式处理，
+
+    console.log(`数组执行：${method}`);
+  };
+});
+
 function defineReactive(obj, key, val) {
   //val传入一个对象，就需要递归处理
   observe(val);
 
-  // 每执行一次defineReactive就产生这个key一一对应的Dep 
-  let dep = new Dep()
-  
+  // 每执行一次defineReactive就产生这个key一一对应的Dep
+  let dep = new Dep();
+
   Object.defineProperty(obj, key, {
-    get () {
-      Dep.target && dep.addDep(Dep.target)
+    get() {
+      Dep.target && dep.addDep(Dep.target);
       return val;
     },
     set(newVal) {
-      if (val !== newVal) { 
+      if (val !== newVal) {
         observe(newVal);
         val = newVal;
 
         // 如果这个key发生了变化，就用dep通知所有的watcher更新
-        dep.notify()
+        dep.notify();
       }
     },
   });
@@ -26,16 +52,11 @@ function defineReactive(obj, key, val) {
 function observe(obj) {
   //判断：传入的obj，必须是个对象。
   if (typeof obj !== 'object' || obj === null) return;
-
-  new Observer(obj);
+ 
+    new Observer(obj);
+  
 }
-
-function set(obj, key, value) {
-  // 用来对新增的属性做响应式处理
-  //只能通过set函数来新增属性，如果直接data.newP则这个newP没有响应式功能
-  defineReactive(obj, key, value);
-}
-
+ 
 class Cue {
   constructor(options) {
     //保存输入的参数选项到实例的$options,$data上
@@ -82,15 +103,34 @@ class Observer {
      * if(isArray){}
      * else(isObject){walk(obj)}
      */
-    this.walk(value);
+
+    if (Array.isArray(value)) {
+      this.arrayWalk(value)
+    } else {
+      this.objectWalk(value);
+    }
+    
   }
 
-  walk(obj) {
+  objectWalk(obj) {
     Object.keys(obj).forEach((key) => {
       //遍历obj的keys，对每个key做响应式处理
       defineReactive(obj, key, obj[key]);
     });
   }
+  arrayWalk (arr) {
+    //如果是一个数组，则对这个数组做响应式
+
+    //覆盖原型
+    Object.setPrototypeOf(arr, cueArrayProto);
+
+    // 对数组内部所有元素做响应式
+ 
+    for (let [index, value] of arr.entries()) {
+      defineReactive(arr,index,value)
+    }
+  }
+
 }
 
 //new Compile(element,vm)
@@ -100,7 +140,7 @@ class Compile {
     this.$vm = vm;
     this.$el = document.querySelector(el);
 
-    //编译模板 
+    //编译模板
     if (this.$el) {
       //如果这个元素，或者这个模板存在，就对其进行编译。
       this.compile(this.$el);
@@ -161,12 +201,27 @@ class Compile {
       let attrName = attr.nodeName; //匹配出来的是c-xxx
       let attrValue = attr.nodeValue; //匹配出来的是aaa
 
-      //判断这个属性是指令属性,还是别的属性
+      //判断这个属性是否为v-text这种指令
       if (this.isDirective(attrName)) {
         //如果是指令型属性,则,截取出c-xxx后面的xxx,然后使用不同的指令处理函数处理这个指令
         let directive = attrName.split('-')[1];
         //如果这个指令处理方法存在,则,调用,参数为:要操作的节点,指令的值
         this[directive] && this[directive](node, attrValue);
+      }
+
+      //判断是否为@click = 'clickHandle'
+      if (this.isEvent(attrName)) {
+        let eventName = attrName.substring(1); //从@click中截出click
+        let eventFnName = attrValue;
+
+        // 截出click后，尝试在当前node上监听click
+
+        // node.addEventListener(eventName,eventHandler)
+        // 为什么这里不能这样写？因为这里的clickHandle只是一个函数名，
+        // 具体的函数，要从app.methods里面去拿到
+        // 因此，还得封装一个函数出来
+
+        this.eventHandler(node, eventName, eventFnName);
       }
     });
   }
@@ -174,6 +229,19 @@ class Compile {
   isDirective(node) {
     //如果这个属性名是以"c-"开头,则返回true
     return node.startsWith('c-');
+  }
+
+  isEvent(attrName) {
+    return attrName.indexOf('@') === 0;
+  }
+
+  eventHandler (node, eventName, eventFnName) {
+    let fn = this.$vm.$options.methods && this.$vm.$options.methods[eventFnName]
+
+    // node.addEventListener(eventName,fn)
+    // 为什么不能直接这样写？因为这个fn是一个函数引用，这个fn中可能会用到this，
+    // 因此，要把this绑定到当前组件实例上去,且用bind，因为要返回一个函数，而不是直接call调用
+    node.addEventListener(eventName,fn.bind(this.$vm))
   }
 
   text(node, dataAttr) {
@@ -195,7 +263,6 @@ class Compile {
     //     //即：node.innerHTML = app[counter]
     //   });
     // }
-    
   }
   html(node, dataAttr) {
     //注意:这里写的是innerHTML,而不是textContent,
@@ -204,16 +271,36 @@ class Compile {
     this.update(node, dataAttr, 'html');
   }
 
+  model (node, dataAttr) {
+    // model要做两件事：完成value赋值 和 事件监听
+
+    // 完成value赋值
+    this.update(node, dataAttr, 'model')
+    
+    // 事件监听
+    node.addEventListener('input', e => {
+      //如果当前文本输入框发生input输入事件，则将输入的值，赋值给data中的数据即可
+      this.$vm[dataAttr] = e.target.value
+    })
+
+  }
+
+  modelUpdater (node, value) {
+    // 给大多数表单元素赋值，就是给value赋值
+    node.value = value
+  }
+  
+
   htmlUpdater(node, value) {
     node.innerHTML = value;
   }
-  textUpdater (node, value) {
+  textUpdater(node, value) {
     // textUpdater(node, this.$vm[dataAttr]);
     // value = this.$vm[dataAttr]
     // 即：node.textContent = value = this.$vm[dataAttr] = app[counter]
     node.textContent = value;
   }
- 
+
   update(node, dataAttr, dir) {
     // 第一件事：生成v-text的处理函数fn 即 this[dir + 'Updater'] 即 textUpdater
     let fn = this[dir + 'Updater'];
@@ -226,19 +313,17 @@ class Compile {
     });
   }
 }
-    /**
-     * 当执行流进入new Watcher,
-     * 就会执行到Dep.target ; this.vm[this.key] ; 就会访问app[counter],就会执行counter的getter
-     * 在counter的getter中会执行：Dep.target && dep.addDep(Dep.target)，
-     * 将这个watcher纳入counter对应的Dep中去管理
-     * 
-     * 因此，就完成了从模板编译-->创建watcher-->创建watcher的过程中就将watch收集
-     * 
-     */
-
+/**
+ * 当执行流进入new Watcher,
+ * 就会执行到Dep.target ; this.vm[this.key] ; 就会访问app[counter],就会执行counter的getter
+ * 在counter的getter中会执行：Dep.target && dep.addDep(Dep.target)，
+ * 将这个watcher纳入counter对应的Dep中去管理
+ *
+ * 因此，就完成了从模板编译-->创建watcher-->创建watcher的过程中就将watch收集
+ *
+ */
 
 //Watcher类:界面中的一个依赖,对应一个watcher,用这个watcher来管理这个依赖
-
 class Watcher {
   // this.vm保存的是实例对象app
   // this.key保存的是counter
@@ -247,15 +332,15 @@ class Watcher {
     this.vm = vm;
     this.key = key;
     this.updateFn = updateFn;
- 
+
     // 每一次生成一个Watcher实例，就将这个实例放到Dep.target上。
-    Dep.target = this
+    Dep.target = this;
     // 访问一次app[counter]，就会调用一次counter的getter，
     // getter中就会执行：Dep.target && dep.addDep(Dep.target);
     // 将当前的这个Dep.target（也就是当前的Watcher实例）存入counter对应的Dep中管理
-    this.vm[this.key]
+    this.vm[this.key];
     // 执行流回来后，清空Dep.target静态属性
-    Dep.target = null
+    Dep.target = null;
   }
 
   //这个更新函数最后由Dep调用
@@ -283,17 +368,17 @@ class Dep {
     this.deps = [];
   }
 
-  addDep (watcher) {
+  addDep(watcher) {
     // 每生成一个counter属性的的watcher实例，就会访问一次counter的getter，
     // 就会在getter中执行：Dep.target && dep.addDep(Dep.target)，将这个watcher放入counter的dep中。
     this.deps.push(watcher);
   }
 
-  notify () {
+  notify() {
     // 提供一个通知方法。当data中的counter被修改了，就会触发counter的setter，
     // 就会执行setter中的：dep.notify()
     // dep.notify()就会执行counter对应的dep中的所有watcher的update()
-    // watcher的upadate()就会执行textUpdater，更新DOM 
+    // watcher的upadate()就会执行textUpdater，更新DOM
 
     this.deps.forEach((watcher) => {
       watcher.update();
