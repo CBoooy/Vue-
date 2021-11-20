@@ -7,7 +7,17 @@
   <title>验证构建</title>
 </head>
 <body>
+  <div id="app"></div>
   
-  <script src="../dist/vue.js"></script>
+  <script src="../dist/Cue.js"></script>
+  <script>
+    let app = new Cue({
+      el:'#app',
+      data:{
+        counter:0
+      },
+      template:'<h1>我是模板1</h1>'
+    })
+  </script>
 </body>
 </html>

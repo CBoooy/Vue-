@@ -1,5 +1,5 @@
-let rollup = require('rollup')
-let fs = require('fs')
+let rollup = require('rollup');
+let fs = require('fs');
 
 let builds = require('./config.js').getAllBuilds();
 // 经过getAllBuilds处理后，builds是一个数组，
@@ -10,7 +10,7 @@ let builds = require('./config.js').getAllBuilds();
 // [
 //   {
 //     input:
-//       'C:\\Users\\ASUS\\Desktop\\Vue原理学习\\Cue2.0\\src\\platforms\\web\\entry-runtime-with-compiler.js',
+//       'C:\\Users\\ASUS\\Desktop\\Cue原理学习\\Cue2.0\\src\\platforms\\web\\entry-runtime-with-compiler.js',
 //     output: {
 //       file: undefined,
 //       format: 'umd',
@@ -41,15 +41,15 @@ function build(builds) {
   next();
 }
 
-function buildEntry (config) {
+function buildEntry(config) {
   // 传入的config长这样：
-  // 
+  //
   // [
   //   {
   //     input:
-  //       'C:\\Users\\ASUS\\Desktop\\Vue原理学习\\Cue2.0\\src\\platforms\\web\\entry-runtime-with-compiler.js',
+  //       'C:\\Users\\ASUS\\Desktop\\Cue原理学习\\Cue2.0\\src\\platforms\\web\\entry-runtime-with-compiler.js',
   //     output: {
-  //       file: 'C:\\Users\\ASUS\\Desktop\\Vue原理学习\\Cue2.0\\dist\\vue.js',
+  //       file: 'C:\\Users\\ASUS\\Desktop\\Cue原理学习\\Cue2.0\\dist\\Cue.js',
   //       format: 'umd',
   //       banner: 'no banner',
   //       name: 'Cue',
@@ -57,9 +57,9 @@ function buildEntry (config) {
   //   },
   //   {
   //     input:
-  //       'C:\\Users\\ASUS\\Desktop\\Vue原理学习\\Cue2.0\\src\\platforms\\web\\entry-runtime.js',
+  //       'C:\\Users\\ASUS\\Desktop\\Cue原理学习\\Cue2.0\\src\\platforms\\web\\entry-runtime.js',
   //     output: {
-  //       file: 'C:\\Users\\ASUS\\Desktop\\Vue原理学习\\Cue2.0\\dist\\vue.runtime.js',
+  //       file: 'C:\\Users\\ASUS\\Desktop\\Cue原理学习\\Cue2.0\\dist\\Cue.runtime.js',
   //       format: 'umd',
   //       banner: 'no banner',
   //       name: 'Cue',
@@ -67,90 +67,94 @@ function buildEntry (config) {
   //   },
   // ];
 
-  let output = config.output
-  let { file, banner } = output
-  return rollup.rollup(config).then((bundle) => {
-    return bundle.generate(output);
-    // return的这个bundle.generate(output)长这样：
-    //     {
-    //   output: [
-    //     {
-    //       code: 'no banner\n' +
-    //         '(function (factory) {\n' +
-    //         "\ttypeof define === 'function' && define.amd ? define(factory) :\n" +
-    //         '\tfactory();\n' +
-    //         "}(function () { 'use strict';\n" +
-    //         '\n' +
-    //         '\t/*\r\n' +
-    //         '\t * @Description:\r\n' +
-    //         '\t */\n' +
-    //         '\n' +
-    //         '}));\n',
-    //       dynamicImports: [],
-    //       exports: [],
-    //       facadeModuleId: 'C:\\Users\\ASUS\\Desktop\\Vue原理学习\\Cue2.0\\src\\platforms\\web\\entry-runtime-with-compiler.js',
-    //       fileName: 'vue.js',
-    //       imports: [],
-    //       isDynamicEntry: false,
-    //       isEntry: true,
-    //       map: null,
-    //       modules: [Object: null prototype],
-    //       name: [Getter]
-    //     }
-    //   ]
-    // }
-    // {
-    //   output: [
-    //     {
-    //       code: 'no banner\n' +
-    //         '(function (factory) {\n' +
-    //         "\ttypeof define === 'function' && define.amd ? define(factory) :\n" +
-    //         '\tfactory();\n' +
-    //         "}(function () { 'use strict';\n" +
-    //         '\n' +
-    //         "\tconsole.log('我是entry-runtime中的代码');\n" +
-    //         '\n' +
-    //         '}));\n',
-    //       dynamicImports: [],
-    //       exports: [],
-    //       facadeModuleId: 'C:\\Users\\ASUS\\Desktop\\Vue原理学习\\Cue2.0\\src\\platforms\\web\\entry-runtime.js',
-    //       fileName: 'vue.runtime.js',
-    //       imports: [],
-    //       isDynamicEntry: false,
-    //       isEntry: true,
-    //       map: null,
-    //       modules: [Object: null prototype],
-    //       name: [Getter]
-    //     }
-    //   ]
-    // }
-  }).then(({ output: [{ code }] }) => {
-    //这里的参数是解构赋值的写法，获得了output和code，
-     
-    // 获得code，然后写入到某个文件中去
-    return write(file, code);
-  }).catch(err => {
-    console.log('打包出错');
-  })
+  let output = config.output;
+  let { file, banner } = output;
+  return rollup
+    .rollup(config)
+    .then((bundle) => {
+      return bundle.generate(output);
+      // return的这个bundle.generate(output)长这样：
+      //     {
+      //   output: [
+      //     {
+      //       code: 'no banner\n' +
+      //         '(function (factory) {\n' +
+      //         "\ttypeof define === 'function' && define.amd ? define(factory) :\n" +
+      //         '\tfactory();\n' +
+      //         "}(function () { 'use strict';\n" +
+      //         '\n' +
+      //         '\t/*\r\n' +
+      //         '\t * @Description:\r\n' +
+      //         '\t */\n' +
+      //         '\n' +
+      //         '}));\n',
+      //       dynamicImports: [],
+      //       exports: [],
+      //       facadeModuleId: 'C:\\Users\\ASUS\\Desktop\\Cue原理学习\\Cue2.0\\src\\platforms\\web\\entry-runtime-with-compiler.js',
+      //       fileName: 'Cue.js',
+      //       imports: [],
+      //       isDynamicEntry: false,
+      //       isEntry: true,
+      //       map: null,
+      //       modules: [Object: null prototype],
+      //       name: [Getter]
+      //     }
+      //   ]
+      // }
+      // {
+      //   output: [
+      //     {
+      //       code: 'no banner\n' +
+      //         '(function (factory) {\n' +
+      //         "\ttypeof define === 'function' && define.amd ? define(factory) :\n" +
+      //         '\tfactory();\n' +
+      //         "}(function () { 'use strict';\n" +
+      //         '\n' +
+      //         "\tconsole.log('我是entry-runtime中的代码');\n" +
+      //         '\n' +
+      //         '}));\n',
+      //       dynamicImports: [],
+      //       exports: [],
+      //       facadeModuleId: 'C:\\Users\\ASUS\\Desktop\\Cue原理学习\\Cue2.0\\src\\platforms\\web\\entry-runtime.js',
+      //       fileName: 'Cue.runtime.js',
+      //       imports: [],
+      //       isDynamicEntry: false,
+      //       isEntry: true,
+      //       map: null,
+      //       modules: [Object: null prototype],
+      //       name: [Getter]
+      //     }
+      //   ]
+      // }
+    })
+    .then(({ output: [{ code }] }) => {
+      //这里的参数是解构赋值的写法，获得了output和code，
+
+      // 获得code，然后写入到某个文件中去
+      return write(file, code);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 }
 
-function write (destination, code) {
+function write(destination, code) {
   return new Promise((resolve, reject) => {
     // 打包的入口文件是：entry-runtime-with-compiler.js
-    // 根据配置，出口文件是dest：绝对路径/dist/vue.js
+    // 根据配置，出口文件是dest：绝对路径/dist/Cue.js
 
-    function report (destination) {
+    function report(destination) {
       //作用：报告打包成功，和，resolve()
       console.log(`打包成功至：${destination}`);
-      resolve() 
+      resolve();
     }
 
     fs.writeFile(destination, code, (err) => {
       if (err) {
-         return reject(err)
+        return reject(err);
       } else {
-        report(destination)
-      } 
+        report(destination);
+      }
     });
-  })
+  });
 }
